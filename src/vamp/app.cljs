@@ -28,13 +28,21 @@
      "Select All"]]])
 
 (defn practice-section []
-  (let [active-chord @(rf/subscribe [:active-chord])]
+  (let [active-chord @(rf/subscribe [:active-chord])
+        tempo @(rf/subscribe [:tempo])]
     [:div
      [:div.text-6xl.mx-auto.my-14 active-chord]
      [:button.p-3.rounded-md.bg-lime-400
       {:on-click #(rf/dispatch [:cycle-active-chord])}
       "Next"]
-     [:div [:input {:type "range" }]]]))
+     [:div.my-5 [:input {:type "range"
+                         :min 55
+                         :max 120
+                         :value tempo
+                         :on-change #(rf/dispatch [:update-tempo (.. % -target -value)])}]
+      [:input.m-5 {:type "text"
+               :on-change #(rf/dispatch [:update-tempo (.. % -target -value)])
+               :value tempo}]]]))
 
 (defn vamp-section []
   (let [vamp-chords @(rf/subscribe [:active-vamp])]

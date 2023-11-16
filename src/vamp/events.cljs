@@ -17,7 +17,7 @@
   [event-id handler]
   (rf/reg-event-fx
    event-id
-   [(persist-db-keys :vamp-app [:selected-chords])]
+   [(persist-db-keys :vamp-app [:selected-chords :tempo])]
    (fn [{:keys [db]} event-vec]
      {:db (handler db event-vec)})))
 
@@ -50,6 +50,10 @@
  (fn [{:keys [db]} [_]]
    {:db (assoc db :active-vamp (take 4 (shuffle (seq (:selected-chords db)))))}))
 
+(persisted-reg-event-db
+ :update-tempo
+ (fn [db [_ tempo]]
+   (assoc db :tempo tempo)))
 
 ;; --- subs --- ;;
 
@@ -67,3 +71,8 @@
  :active-vamp
  (fn [db _]
    (-> db :active-vamp)))
+
+(rf/reg-sub
+ :tempo
+ (fn [db _]
+   (-> db :tempo)))
