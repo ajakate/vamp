@@ -13,6 +13,11 @@
   (let [coll-without-element (disj coll el)]
     (rand-nth (seq coll-without-element))))
 
+(defn cycle-random-chord [coll current]
+  (let [new-live (second current)
+        coll-without-current (disj coll new-live)]
+    [new-live (rand-nth (seq coll-without-current))]))
+
 (defn persisted-reg-event-db
   [event-id handler]
   (rf/reg-event-fx
@@ -27,7 +32,7 @@
  :toggle-chord
  (fn [db [_ chord]]
    (let [selected-chords (or (:selected-chords db) #{})
-         new-selected-chords (add-or-remove selected-chords chord)] 
+         new-selected-chords (add-or-remove selected-chords chord)]
      (assoc db :selected-chords new-selected-chords))))
 
 (persisted-reg-event-db
@@ -43,7 +48,7 @@
 (rf/reg-event-fx
  :cycle-active-chord
  (fn [{:keys [db]} [_]]
-   {:db (assoc db :active-chord (get-random-chord (:selected-chords db) (:active-chord db)))}))
+   {:db (assoc db :active-chord (cycle-random-chord (:selected-chords db) (:active-chord db)))}))
 
 (rf/reg-event-fx
  :cycle-active-vamp
@@ -76,3 +81,8 @@
  :tempo
  (fn [db _]
    (-> db :tempo)))
+
+(comment
+  
+  
+  ,)

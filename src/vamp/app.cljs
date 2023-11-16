@@ -31,7 +31,8 @@
   (let [active-chord @(rf/subscribe [:active-chord])
         tempo @(rf/subscribe [:tempo])]
     [:div
-     [:div.text-6xl.mx-auto.my-14 active-chord]
+     [:div.text-6xl.mx-auto.my-14 (first active-chord)]
+     [:div.mb-3 [:span.mr-4 "Next: "] (second active-chord)]
      [:button.p-3.rounded-md.bg-lime-400
       {:on-click #(rf/dispatch [:cycle-active-chord])}
       "Next"]
@@ -69,6 +70,7 @@
 
 (defn ^:export ^:dev/once init []
   (rf/dispatch-sync [:init-local-storage])
+  (rf/dispatch-sync [:cycle-active-chord])
   (rf/dispatch-sync [:cycle-active-chord])
   (rf/dispatch-sync [:cycle-active-vamp])
   (mount-root))
