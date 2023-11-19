@@ -29,21 +29,26 @@
 
 (defn practice-section []
   (let [active-chord @(rf/subscribe [:active-chord])
-        tempo @(rf/subscribe [:tempo])]
+        tempo @(rf/subscribe [:tempo])
+        met-active @(rf/subscribe [:metronome-active])]
     [:div
      [:div.text-6xl.mx-auto.my-14 (first active-chord)]
      [:div.mb-3 [:span.mr-4 "Next: "] (second active-chord)]
-     [:button.p-3.rounded-md.bg-lime-400
+     [:button.p-3.rounded-md.bg-lime-400.next-chord-button
       {:on-click #(rf/dispatch [:cycle-active-chord])}
       "Next"]
-     [:div.my-5 [:input {:type "range"
-                         :min 55
-                         :max 120
-                         :value tempo
-                         :on-change #(rf/dispatch [:update-tempo (.. % -target -value)])}]
-      [:input.m-5 {:type "text"
-               :on-change #(rf/dispatch [:update-tempo (.. % -target -value)])
-               :value tempo}]]]))
+     [:div.my-5
+      [:input {:type "range"
+               :min 55
+               :max 120
+               :value tempo
+               :on-change #(rf/dispatch [:update-tempo (.. % -target -value)])}]
+      [:input.m-5.bpm-input {:type "text"
+                             :on-change #(rf/dispatch [:update-tempo (.. % -target -value)])
+                             :value tempo}]
+      (if met-active
+        [:button.metronome-button.rounded-md.p-3.bg-red-400 {:on-click #(rf/dispatch [:click-metronome])}  "Stop Metronome"]
+        [:button.metronome-button.rounded-md.p-3.bg-green-400 {:on-click #(rf/dispatch [:click-metronome])}  "Start Metronome"])]]))
 
 (defn vamp-section []
   (let [vamp-chords @(rf/subscribe [:active-vamp])]

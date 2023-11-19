@@ -55,6 +55,12 @@
  (fn [{:keys [db]} [_]]
    {:db (assoc db :active-vamp (take 4 (shuffle (seq (:selected-chords db)))))}))
 
+(rf/reg-event-fx
+ :click-metronome
+ (fn [{:keys [db]} [_]]
+   (.click (js/$ ".metronome-toggle"))
+   {:db (assoc db :metronome-active (not (:metronome-active db)))}))
+
 (persisted-reg-event-db
  :update-tempo
  (fn [db [_ tempo]]
@@ -82,7 +88,11 @@
  (fn [db _]
    (-> db :tempo)))
 
+(rf/reg-sub
+ :metronome-active
+ (fn [db _]
+   (-> db :metronome-active)))
+
 (comment
-  
-  
+
   ,)
