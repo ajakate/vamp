@@ -5,20 +5,25 @@
             [vamp.music :as m]
             [re-frame.core :as rf]))
 
-(defn button [content]
+(defn chord-button [content]
   (let [selected-chords @(rf/subscribe [:selected-chords])
-        color-class (if (contains? selected-chords content) "bg-cyan-400" "bg-cyan-100")]
-    [:button.p-3.rounded-md
-     {:on-click #(rf/dispatch [:toggle-chord content])
-      :class color-class}
-     content]))
+        chord-count (get selected-chords content)
+        chord-count (if (nil? chord-count) 0 chord-count)
+        color-class (if (< 0 chord-count) "bg-cyan-400" "bg-cyan-100")]
+    [:div.p-3.rounded-md
+     {:class color-class}
+     [:div content]
+     [:div.flex.justify-between
+      [:button {:on-click #(rf/dispatch [:update-chord-count content :dec])} "-"]
+      [:div.px-5 (str " " chord-count " ")]
+      [:button {:on-click #(rf/dispatch [:update-chord-count content :inc])} "+"]]]))
 
 (defn chord-grid []
   [:div
    [:div.grid.grid-rows-3.grid-flow-col.gap-3
     (for [chord m/chords]
       ^{:key chord}
-      [button chord])]
+      [chord-button chord])]
    [:div.flex.flex-row-reverse.gap-4.my-3
     [:button.p-3.rounded-md.bg-blue-100
      {:on-click #(rf/dispatch [:clear-selected])}
@@ -50,22 +55,9 @@
         [:button.metronome-button.rounded-md.p-3.bg-red-400 {:on-click #(rf/dispatch [:click-metronome])}  "Stop Metronome"]
         [:button.metronome-button.rounded-md.p-3.bg-green-400 {:on-click #(rf/dispatch [:click-metronome])}  "Start Metronome"])]]))
 
-(defn vamp-section []
-  (let [vamp-chords @(rf/subscribe [:active-vamp])]
-    [:div
-     [:div.my-auto.mx-auto.text-4xl.py-14
-      (for [chord vamp-chords]
-        ^{:key chord}
-        [:span.mx-4 chord])]
-     [:button.p-3.rounded-md.bg-lime-400
-      {:on-click #(rf/dispatch [:cycle-active-vamp])}
-      "Next"]]))
-
 (defn main-page []
-  [:div.max-w-5xl.m-auto
-   [:div.grid.grid-cols-2
-    [practice-section]
-    [vamp-section]]
+  [:div.max-w-6xl.m-auto
+   [practice-section]
    [:div.my-24]
    [chord-grid]])
 
@@ -77,5 +69,18 @@
   (rf/dispatch-sync [:init-local-storage])
   (rf/dispatch-sync [:cycle-active-chord])
   (rf/dispatch-sync [:cycle-active-chord])
-  (rf/dispatch-sync [:cycle-active-vamp])
   (mount-root))
+
+(comment
+  
+  (defn plus [num] (+ 2 num))
+
+  (plus 3)
+
+  (def mine plus)
+
+  (mine 4)
+
+
+  
+  ,)

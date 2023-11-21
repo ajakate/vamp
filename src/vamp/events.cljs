@@ -4,19 +4,29 @@
    [vamp.music :as m]
    [akiroz.re-frame.storage :refer [persist-db-keys]]))
 
-(defn add-or-remove [coll el]
-  (if (contains? coll el)
-    (disj coll el)
-    (conj coll el)))
+(defn add-or-inc [coll el]
+  (let [rest (dissoc coll el)
+        current-amount (get coll el)]
+    (assoc rest el (+ current-amount 1))))
 
-(defn get-random-chord [coll el]
-  (let [coll-without-element (disj coll el)]
-    (rand-nth (seq coll-without-element))))
+(defn remove-or-dec [coll el]
+  (let [rest (dissoc coll el)
+        current-amount (get coll el)
+        new-amount (- current-amount 1)]
+    (if (< new-amount 1)
+      rest
+      (assoc rest el new-amount))))
 
 (defn cycle-random-chord [coll current]
   (let [new-live (second current)
-        coll-without-current (disj coll new-live)]
-    [new-live (rand-nth (seq coll-without-current))]))
+        map-without-current (dissoc coll new-live)
+        full-seq (reduce
+                  (fn [acc [chord count]]
+                    (concat acc (take count (repeat chord))))
+                  [] (seq map-without-current))]
+    (if (empty? full-seq)
+      nil
+      [new-live (rand-nth full-seq)])))
 
 (defn persisted-reg-event-db
   [event-id handler]
@@ -29,31 +39,31 @@
 (persisted-reg-event-db :init-local-storage (fn [db] db))
 
 (persisted-reg-event-db
- :toggle-chord
- (fn [db [_ chord]]
-   (let [selected-chords (or (:selected-chords db) #{})
-         new-selected-chords (add-or-remove selected-chords chord)]
+ :update-chord-count
+ (fn [db [_ chord inc-or-dec]]
+   (let [func (if (= inc-or-dec :inc) add-or-inc remove-or-dec)
+         selected-chords (or (:selected-chords db) {})
+         new-selected-chords (func selected-chords chord)]
      (assoc db :selected-chords new-selected-chords))))
 
 (persisted-reg-event-db
  :clear-selected
  (fn [db [_]]
-   (assoc db :selected-chords #{})))
+   (assoc db :selected-chords {})))
 
 (persisted-reg-event-db
  :select-all
  (fn [db [_]]
-   (assoc db :selected-chords (set m/chords))))
+   (assoc db :selected-chords
+          (reduce
+           (fn [acc k]
+             (assoc acc k 1))
+           {} m/chords))))
 
 (rf/reg-event-fx
  :cycle-active-chord
  (fn [{:keys [db]} [_]]
    {:db (assoc db :active-chord (cycle-random-chord (:selected-chords db) (:active-chord db)))}))
-
-(rf/reg-event-fx
- :cycle-active-vamp
- (fn [{:keys [db]} [_]]
-   {:db (assoc db :active-vamp (take 4 (shuffle (seq (:selected-chords db)))))}))
 
 (rf/reg-event-fx
  :click-metronome
@@ -77,11 +87,6 @@
  :active-chord
  (fn [db _]
    (-> db :active-chord)))
-
-(rf/reg-sub
- :active-vamp
- (fn [db _]
-   (-> db :active-vamp)))
 
 (rf/reg-sub
  :tempo
