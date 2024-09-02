@@ -50,3 +50,13 @@ $(".metronome-toggle").click(function () {
         schedule();
     }
 });
+
+window.addEventListener('keydown', function(e) {
+    if (e.code === 'Space') {
+        const element = document.querySelector('.metronome-button');
+        if (element) {
+            element.click();
+        }
+        console.log('Space pressed');
+    }
+});
