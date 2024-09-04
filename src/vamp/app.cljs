@@ -5,6 +5,20 @@
             [vamp.music :as m]
             [re-frame.core :as rf]))
 
+(defn chord-slider []
+  (let [chord-type @(rf/subscribe [:chord-type])
+        jazz-color-class (if (= chord-type "jazz") "bg-indigo-400" "bg-indigo-50")
+        triad-color-class (if (= chord-type "triad") "bg-indigo-400" "bg-indigo-50")]
+    [:div.my-5.flex
+     [:button.p-3.rounded-l-lg.max-w-32
+      {:on-click #(rf/dispatch [:set-chord-type "jazz"])
+       :class jazz-color-class}
+      "Jazz Chords"]
+     [:button.p-3.rounded-r-lg.max-w-32
+      {:on-click #(rf/dispatch [:set-chord-type "triad"])
+       :class triad-color-class}
+      "Triad Chords"]]))
+
 (defn chord-button [content]
   (let [selected-chords @(rf/subscribe [:selected-chords])
         chord-count (get selected-chords content)
@@ -19,25 +33,27 @@
       [:button {:on-click #(rf/dispatch [:update-chord-count content :inc])} "+"]]]))
 
 (defn chord-grid []
-  [:div
-   [:div.grid.grid-rows-3.grid-flow-col.gap-3
-    (for [chord m/chords]
-      ^{:key chord}
-      [chord-button chord])]
-   [:div.flex.flex-row-reverse.gap-4.my-3
-    [:button.p-3.rounded-md.bg-blue-100
-     {:on-click #(rf/dispatch [:clear-selected])}
-     "Clear All"]
-    [:button.p-3.rounded-md.bg-blue-400
-     {:on-click #(rf/dispatch [:select-all])}
-     "Select All"]]])
+  (let [chord-type @(rf/subscribe [:chord-type])
+        chord-list (if (= chord-type "jazz") m/chords m/triads)]
+    [:div
+     [:div.flex.flex-wrap.gap-3
+      (for [chord chord-list]
+        ^{:key chord}
+        [chord-button chord])]
+     [:div.flex.flex-row-reverse.gap-4.mt-6.mb-16
+      [:button.p-3.rounded-md.bg-blue-100
+       {:on-click #(rf/dispatch [:clear-selected])}
+       "Clear All"]
+      [:button.p-3.rounded-md.bg-blue-400
+       {:on-click #(rf/dispatch [:select-all])}
+       "Select All"]]]))
 
 (defn practice-section []
   (let [active-chord @(rf/subscribe [:active-chord])
         tempo @(rf/subscribe [:tempo])
         met-active @(rf/subscribe [:metronome-active])]
     [:div
-     [:div.text-6xl.mx-auto.my-14 (first active-chord)]
+     [:div.text-5xl.mx-auto.my-5 (first active-chord)]
      [:div.mb-3 [:span.mr-4 "Next: "] (second active-chord)]
      [:button.p-3.rounded-md.bg-lime-400.next-chord-button
       {:on-click #(rf/dispatch [:cycle-active-chord])}
@@ -56,9 +72,10 @@
         [:button.metronome-button.rounded-md.p-3.bg-green-400 {:on-click #(rf/dispatch [:click-metronome])}  "Start Metronome"])]]))
 
 (defn main-page []
-  [:div.max-w-6xl.m-auto
+  [:div.max-w-6xl.m-auto.px-4
    [practice-section]
-   [:div.my-24]
+   [:div.my-10]
+   [chord-slider]
    [chord-grid]])
 
 (defn ^:dev/after-load mount-root []
@@ -70,17 +87,3 @@
   (rf/dispatch-sync [:cycle-active-chord])
   (rf/dispatch-sync [:cycle-active-chord])
   (mount-root))
-
-(comment
-  
-  (defn plus [num] (+ 2 num))
-
-  (plus 3)
-
-  (def mine plus)
-
-  (mine 4)
-
-
-  
-  ,)

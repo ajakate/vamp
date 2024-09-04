@@ -13,3 +13,17 @@
    "A M7" "A 7" "A m7"
    "Bb M7" "Bb 7" "Bb m7"
    "B M7" "B 7" "B m7"])
+
+(def triads
+  ["C" "Cm"
+   "Db" "Dbm"
+   "D" "Dm"
+   "Eb" "Ebm"
+   "E" "Em"
+   "F" "Fm"
+   "Gb" "Gbm"
+   "G" "Gm"
+   "Ab" "Abm"
+   "A" "Am"
+   "Bb" "Bbm"
+   "B" "Bm"])

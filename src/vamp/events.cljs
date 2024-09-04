@@ -28,11 +28,16 @@
       nil
       [new-live (rand-nth full-seq)])))
 
+(defn split-chords [selected-chords]
+  (let [is-7th? #(re-find #"7" (str (key %)))]
+    [(into {} (filter is-7th? selected-chords))
+     (into {} (filter (complement is-7th?) selected-chords))]))
+
 (defn persisted-reg-event-db
   [event-id handler]
   (rf/reg-event-fx
    event-id
-   [(persist-db-keys :vamp-app [:selected-chords :tempo])]
+   [(persist-db-keys :vamp-app [:selected-chords :tempo :chord-type])]
    (fn [{:keys [db]} event-vec]
      {:db (handler db event-vec)})))
 
@@ -47,18 +52,29 @@
      (assoc db :selected-chords new-selected-chords))))
 
 (persisted-reg-event-db
+ :set-chord-type
+ (fn [db [_ chord-type]]
+   (assoc db :chord-type chord-type)))
+
+(persisted-reg-event-db
  :clear-selected
  (fn [db [_]]
-   (assoc db :selected-chords {})))
+   (let [[jazz-chords triad-chords] (split-chords (:selected-chords db))
+         to-merge (if (= (:chord-type db) "jazz") triad-chords jazz-chords)]
+     (assoc db :selected-chords to-merge))))
 
 (persisted-reg-event-db
  :select-all
  (fn [db [_]]
-   (assoc db :selected-chords
-          (reduce
-           (fn [acc k]
-             (assoc acc k 1))
-           {} m/chords))))
+   (let [chord-list (if (= (:chord-type db) "jazz") m/chords m/triads)
+         [jazz-chords triad-chords] (split-chords (:selected-chords db))
+         to-merge (if (= (:chord-type db) "jazz") triad-chords jazz-chords)]
+     (assoc db :selected-chords
+            (merge to-merge
+                   (reduce
+                    (fn [acc k]
+                      (assoc acc k 1))
+                    {} chord-list))))))
 
 (rf/reg-event-fx
  :cycle-active-chord
@@ -98,6 +114,7 @@
  (fn [db _]
    (-> db :metronome-active)))
 
-(comment
-
-  ,)
+(rf/reg-sub
+ :chord-type
+ (fn [db _]
+   (-> db :chord-type (or "jazz"))))
