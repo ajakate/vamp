@@ -1,5 +1,33 @@
-window.AudioContext = window.AudioContext || window.webkitAudioContext;
+window.AudioContext = window.AudioContext || window.webkitAudioContext || null;
 var context = new AudioContext();
+
+var context = null;
+var usingWebAudio = null;
+
+try {
+    if (typeof AudioContext !== 'undefined') {
+        context = new AudioContext();
+    } else if (typeof webkitAudioContext !== 'undefined') {
+        context = new webkitAudioContext();
+    } else {
+        usingWebAudio = false;
+    }
+} catch (e) {
+    usingWebAudio = false;
+};
+
+if (usingWebAudio && context.state === 'suspended') {
+    var resume = function () {
+        context.resume();
+        setTimeout(function () {
+            if (context.state === 'running') {
+                document.body.removeEventListener('touchend', resume, false);
+            }
+        }, 0);
+    };
+    document.body.addEventListener('touchend', resume, false);
+};
+
 var timer, noteCount, accentPitch = 380, offBeatPitch = 200;
 var curTime = 0.0;
 var beatsPerMeasure = 4;
@@ -51,7 +79,7 @@ $(".metronome-toggle").click(function () {
     }
 });
 
-window.addEventListener('keydown', function(e) {
+window.addEventListener('keydown', function (e) {
     if (e.code === 'Space') {
         const element = document.querySelector('.metronome-button');
         if (element) {
