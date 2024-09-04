@@ -107,7 +107,7 @@
 (rf/reg-sub
  :tempo
  (fn [db _]
-   (-> db :tempo)))
+   (-> db :tempo (or 80))))
 
 (rf/reg-sub
  :metronome-active
