@@ -60,7 +60,7 @@
       "Next"]
      [:div.my-5
       [:input {:type "range"
-               :min 55
+               :min 40
                :max 120
                :value tempo
                :on-change #(rf/dispatch [:update-tempo (.. % -target -value)])}]
